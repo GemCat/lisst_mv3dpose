@@ -11,15 +11,16 @@ import json
 import numpy as np
 import shutil
 
-dataset_dir = '/home/user/dataset'
-output_dir = join(dataset_dir, 'tracks3d')
+dataset_dir = '/home/emilia/digital_humans/project/lisst_mv3dpose/dataset'
+output_dir = join(dataset_dir, 'output')
 dataset_json = join(dataset_dir, 'dataset.json')
+json_poses_prefix = 'pizza_00_'
 
-vid_dir = join(dataset_dir, 'videos')
+# vid_dir = join(dataset_dir, 'openpose_keypoints')
 cam_dir = join(dataset_dir, 'cameras')
-kyp_dir = join(dataset_dir, 'poses')
+kyp_dir = join(dataset_dir, 'openpose_keypoints')
 
-assert isdir(vid_dir)
+# assert isdir(vid_dir)
 assert isdir(cam_dir)
 
 if isdir(output_dir):
@@ -65,7 +66,7 @@ if 'valid_frames' in Settings:
     valid_frames = Settings['valid_frames']
 else:
     # take all frames in the setup
-    files = listdir(join(vid_dir, 'camera00'))
+    files = listdir(join(kyp_dir, f'{json_poses_prefix}00_json'))
     valid_frames = list(range(len(files)))
 
 print("\n#frames", len(valid_frames))
@@ -76,10 +77,12 @@ print("\n#frames", len(valid_frames))
 print('\n[load keypoints]')
 keypoints = []
 for cid in tqdm(range(n_cameras)):
-    loc = join(kyp_dir, 'camera%02d' % cid)
+    loc = join(kyp_dir, f'{json_poses_prefix}%02d_json' % cid)
     assert isdir(loc), loc
-    pe = OpenPoseKeypoints('frame%09d', loc)
+    file_prefix = f'{json_poses_prefix}%02d' % cid
+    pe = OpenPoseKeypoints(f'{file_prefix}_%012d', loc)
     keypoints.append(pe)
+
 pe = MultiOpenPoseKeypoints(keypoints)
 
 # ~~~~~~~~~~~~~
@@ -94,7 +97,7 @@ try:
         for cid in range(n_cameras):
             local_camdir = join(cam_dir, 'camera%02d' % cid)
             assert isdir(local_camdir)
-            cam_fname = join(local_camdir, 'frame%09d.json' % t)
+            cam_fname = join(local_camdir, 'camera%02d_calibration.json' % cid)
             assert isfile(cam_fname), cam_fname
             cam = camera.Camera.load_from_file(cam_fname)
             calib.append(cam)

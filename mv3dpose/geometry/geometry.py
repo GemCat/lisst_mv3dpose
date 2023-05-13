@@ -17,10 +17,10 @@ def get_projection_matrix(K, rvec, tvec):
     :param tvec: loc vector
     :return:
     """
-    R = cv2.Rodrigues(rvec)[0]
     Rt = np.zeros((3, 4))
-    Rt[:, 0:3] = R
-    Rt[:, 3] = tvec
+    Rt[:, 0:3] = rvec
+    Rt[:, 3] = tvec[:, 0]
+
     return K @ Rt
 
 

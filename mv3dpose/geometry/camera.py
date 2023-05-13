@@ -22,11 +22,11 @@ class Camera:
             return cam
         elif "K" in data:
             K = np.array(data['K'])
-            rvec = np.array(data['rvec'])
-            tvec = np.array(data['tvec'])
+            rvec = np.array(data['R'])
+            tvec = np.array(data['t'])
             distCoef = np.array(data['distCoef'])
-            w = data['w']
-            h = data['h']
+            w = data['resolution'][0]
+            h = data['resolution'][1]
             cam = ProjectiveCamera(K, rvec, tvec, distCoef, w, h)
             return cam
         else:

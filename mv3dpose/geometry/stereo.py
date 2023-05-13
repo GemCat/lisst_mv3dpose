@@ -3,6 +3,47 @@ import numpy as np
 import mv3dpose.geometry.geometry as gm
 
 
+def det_4x4(mat):
+    a, b, c, d = mat[0,0], mat[0,1], mat[0,2], mat[0,3]
+    e, f, g, h = mat[1,0], mat[1,1], mat[1,2], mat[1,3]
+    i, j, k, l = mat[2,0], mat[2,1], mat[2,2], mat[2,3]
+    m, n, o, p = mat[3,0], mat[3,1], mat[3,2], mat[3,3]
+    return a * (f * (k*p - l*o) + g * (l*n - j*p) + h * (j*o - k*n)) + \
+            b * (e * (l*o - k*p) + g * (i*p - l*m) + h * (k*m - i*o)) + \
+            c * (e * (j*p - l*n) + f * (l*m - i*p) + h * (i*n - j*m)) + \
+            d * (e * (k*n - j*o) + f * (i*o - k*m) + g * (j*m - i*n))
+
+
+def get_fundamental_matrix(p_left_3x4, p_right_3x4):
+    f_3x3 = np.empty((3, 3))
+    p1, p2 = p_left_3x4, p_right_3x4
+
+    x = np.empty((3, 2, 4), dtype=np.float64)
+    x[0, 0, :] = p1[1, :]
+    x[0, 1, :] = p1[2, :]
+    x[1, 0, :] = p1[2, :]
+    x[1, 1, :] = p1[0, :]
+    x[2, 0, :] = p1[0, :]
+    x[2, 1, :] = p1[1, :]
+
+    y = np.empty((3, 2, 4), dtype=np.float64)
+    y[0, 0, :] = p2[1, :]
+    y[0, 1, :] = p2[2, :]
+    y[1, 0, :] = p2[2, :]
+    y[1, 1, :] = p2[0, :]
+    y[2, 0, :] = p2[0, :]
+    y[2, 1, :] = p2[1, :]
+
+    xy = np.empty((4, 4), dtype=np.float64)
+
+    for i in range(3):
+        xy[2:4, :] = y[i, :, :]
+        for j in range(3):
+            xy[0:2, :] = x[j, :, :]
+            f_3x3[i, j] = det_4x4(xy)
+
+    return f_3x3
+
 def get_fundamental_matrix(P1, P2):
     """
         finds the fundamental matrix between two views
