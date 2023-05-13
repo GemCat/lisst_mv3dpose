@@ -67,13 +67,12 @@ def tracking(calib_per_frame, poses_per_frame,
                                distance_threshold=distance_threshold,
                                correct_limb_size=correct_limb_size,
                                get_hypothesis=False)
-
         possible_tracks = []
         for track in all_tracks:
             if track.last_seen() + last_seen_delay < real_t:
                 continue  # track is too old..
             possible_tracks.append(track)
-
+    
         n = len(possible_tracks)
         if n > 0:
             m = len(predictions)

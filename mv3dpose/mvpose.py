@@ -49,7 +49,7 @@ epi_threshold = get_optional(
 max_distance_between_tracks = get_optional(
     'max_distance_between_tracks', 80)
 min_track_length = get_optional(
-    'min_track_length', 10)
+    'min_track_length', 5)
 merge_distance = get_optional(
     'merge_distance', 80)
 last_seen_delay = get_optional(
@@ -91,16 +91,24 @@ pe = MultiOpenPoseKeypoints(keypoints)
 print('\n[load cameras]')
 Calib = []  # { n_frames x n_cameras }
 try:
-    for t in tqdm(valid_frames):
-        calib = []
-        Calib.append(calib)
-        for cid in range(n_cameras):
-            local_camdir = join(cam_dir, 'camera%02d' % cid)
-            assert isdir(local_camdir)
-            cam_fname = join(local_camdir, 'camera%02d_calibration.json' % cid)
-            assert isfile(cam_fname), cam_fname
-            cam = camera.Camera.load_from_file(cam_fname)
-            calib.append(cam)
+    # for t in tqdm(valid_frames):
+    #     calib = []
+    #     Calib.append(calib)
+    #     for cid in range(n_cameras):
+    #         local_camdir = join(cam_dir, 'camera%02d' % cid)
+    #         assert isdir(local_camdir)
+    #         cam_fname = join(local_camdir, 'camera%02d_calibration.json' % cid)
+    #         assert isfile(cam_fname), cam_fname
+    #         cam = camera.Camera.load_from_file(cam_fname)
+    #         calib.append(cam)
+    # assumption: cameras do not change over time
+    for cid in range(n_cameras):
+        local_camdir = join(cam_dir, 'camera%02d' % cid)
+        assert isdir(local_camdir)
+        cam_fname = join(local_camdir, 'camera%02d_calibration.json' % cid)
+        assert isfile(cam_fname), cam_fname
+        cam = camera.Camera.load_from_file(cam_fname)
+        Calib.append(cam)
 except AssertionError:
     print('\tnew version of cameras is used...')
 
@@ -186,7 +194,7 @@ print('\telapsed', _end - _start)
 print("\n\t# detected tracks:", len(tracks))
 
 # ~~~~~~~~~~~~~~~
-# S M O T H I N G
+# S M O O T H I N G
 # ~~~~~~~~~~~~~~~
 if do_smoothing:
     print('\n[smoothing]')
@@ -205,4 +213,3 @@ print('\n[serialize 3d tracks]')
 for tid, track in tqdm(enumerate(tracks)):
     fname = join(output_dir, 'track' + str(tid) + '.json')
     track.to_file(fname)
-
