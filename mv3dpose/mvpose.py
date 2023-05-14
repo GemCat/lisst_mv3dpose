@@ -91,21 +91,9 @@ pe = MultiOpenPoseKeypoints(keypoints)
 print('\n[load cameras]')
 Calib = []  # { n_frames x n_cameras }
 try:
-    # for t in tqdm(valid_frames):
-    #     calib = []
-    #     Calib.append(calib)
-    #     for cid in range(n_cameras):
-    #         local_camdir = join(cam_dir, 'camera%02d' % cid)
-    #         assert isdir(local_camdir)
-    #         cam_fname = join(local_camdir, 'camera%02d_calibration.json' % cid)
-    #         assert isfile(cam_fname), cam_fname
-    #         cam = camera.Camera.load_from_file(cam_fname)
-    #         calib.append(cam)
     # assumption: cameras do not change over time
     for cid in range(n_cameras):
-        local_camdir = join(cam_dir, 'camera%02d' % cid)
-        assert isdir(local_camdir)
-        cam_fname = join(local_camdir, 'camera%02d_calibration.json' % cid)
+        cam_fname = join(cam_dir, 'camera%02d_calibration.json' % cid)
         assert isfile(cam_fname), cam_fname
         cam = camera.Camera.load_from_file(cam_fname)
         Calib.append(cam)
