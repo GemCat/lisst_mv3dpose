@@ -5,9 +5,14 @@
   "output_dir": "output",
   "keypoints_dir": "openpose_keypoints",
   "camera_calib_dir": "cameras",
+  "vis_dir": "visualization",
+  "img_dir": "img_dir",
+  "img_file_type": "jpg",
   "json_poses_prefix": "pizza_00_",
 
   "valid_frames": 8,
+  "vis_frames": 1,
+  "plot3d": true,
 
   "epi_threshold": 80,
   "max_distance_between_tracks": 80,

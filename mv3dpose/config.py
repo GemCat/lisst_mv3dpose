@@ -6,7 +6,7 @@ import json
 import shutil
 
 class Config:
-    def __init__(self, dataset_dir):
+    def __init__(self, dataset_dir, vis = False):
 
         dataset_json = join(dataset_dir, 'dataset.json')
         settings = json.load(open(dataset_json))
@@ -21,10 +21,12 @@ class Config:
         assert isdir(self.cam_dir)
         assert isdir(self.kyp_dir)
 
-        if isdir(self.output_dir):
+        if isdir(self.output_dir) and not vis:
             print('\n[deleting existing output directory...]')
             shutil.rmtree(self.output_dir)
-        makedirs(self.output_dir)
+            
+        if not vis:
+            makedirs(self.output_dir)
 
         # ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -39,3 +41,18 @@ class Config:
         self.valid_frames     = list(range(settings['valid_frames']))
 
         print("\n#frames", len(self.valid_frames))
+
+        if vis:
+            self.trk_dir = self.output_dir
+            assert isdir(self.trk_dir), "the tracks must be extracted!"
+            self.img_dir = join(dataset_dir, 'img')
+
+            self.img_file_type = settings["img_file_type"]
+
+            self.vis_dir = join(dataset_dir, settings['vis_dir'])
+            if isdir(self.vis_dir):
+                shutil.rmtree(self.vis_dir)
+            makedirs(self.vis_dir)
+
+            self.vis_frames = settings['vis_frames']
+            self.plot3d = settings['plot3d']
