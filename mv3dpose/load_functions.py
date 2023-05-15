@@ -22,7 +22,15 @@ def load_keypoints(config: Config):
         keypoints.append(pe)
 
     pe = MultiOpenPoseKeypoints(keypoints)
-    return pe
+
+    # L O A D  2 D  P O S E S
+    print('\n[load 2d poses]')
+    poses_per_frame = []
+    for frame in tqdm(config.valid_frames):
+        predictions = pe.predict(frame)
+        poses_per_frame.append(predictions)
+    
+    return poses_per_frame
 
 
 # ~~~~~~~~~~~~~

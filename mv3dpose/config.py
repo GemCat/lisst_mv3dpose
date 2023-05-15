@@ -37,3 +37,5 @@ class Config:
         self.smoothing_sigma  = settings['smoothing_sigma']
         self.do_smoothing     = settings['do_smoothing']
         self.valid_frames     = list(range(settings['valid_frames']))
+
+        print("\n#frames", len(self.valid_frames))
