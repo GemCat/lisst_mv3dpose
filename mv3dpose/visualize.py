@@ -78,9 +78,9 @@ if __name__ == '__main__':
                 pose3d = pose_by_track_and_frame[tid, frame]
 
                 # we need to mask over None
-                assert len(pose3d) == 24
-                mask = [True] * 24
-                for jid in range(24):
+                assert len(pose3d) == 30
+                mask = [True] * 30
+                for jid in range(30):
                     if pose3d[jid] is None:
                         pose3d[jid] = [0, 0, 0]
                         mask[jid] = False
@@ -92,7 +92,7 @@ if __name__ == '__main__':
                 pose3d = np.array(pose3d, dtype=np.float32)
 
                 pose2d = cam.projectPoints(pose3d)
-                for jid in range(24):
+                for jid in range(30):
                     if mask[jid]:
                         x, y = pose2d[jid]
                         ax.scatter(x, y, color=color)
@@ -116,8 +116,8 @@ if __name__ == '__main__':
                 color = colors[tid%len(colors)]
                 pose3d = pose_by_track_and_frame[tid, frame]
 
-                mask = [True] * 24
-                for jid in range(24):
+                mask = [True] * 30
+                for jid in range(30):
                     if pose3d[jid] is None:
                         mask[jid] = False
                     else:
