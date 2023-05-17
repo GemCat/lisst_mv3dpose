@@ -52,6 +52,8 @@ class OpenPoseKeypoints:
             (14, 15), (15, 16), (16, 17), (17, 18),
             (18, 19), (19, 20), (20, 21),
             (21, 22), (22, 23), (23, 24)
+            (24, 9), (25, 4), (26, 12),
+            (27, 9), (28, 4), (29, 12)
         ])
 
         # J = 18
@@ -62,7 +64,10 @@ class OpenPoseKeypoints:
             OUR = ours_vs_openpose[:, 0]
             OP = ours_vs_openpose[:, 1]
             our_person = np.empty((J, 3), np.float32)
-            kps = np.reshape(person['pose_keypoints_2d'], (-1, 3))
+            body = np.reshape(person['pose_keypoints_2d'], (-1, 3))
+            lhand = np.reshape(person['hand_left_keypoints_2d'], (-1, 3))
+            rhand = np.reshape(person['hand_right_keypoints_2d'], (-1, 3))
+            kps = np.concatenate((body, lhand, rhand), axis=0)
             our_person[OUR] = kps[OP]
 
             for i, (x, y, v) in enumerate(our_person):
