@@ -11,7 +11,7 @@ import json
 import numpy as np
 import shutil
 
-dataset_dir = '/home/emilia/digital_humans/project/lisst_mv3dpose/dataset'
+dataset_dir = 'C:/Users/18329/Documents/lisst_mv3dpose/dataset'
 output_dir = join(dataset_dir, 'output')
 dataset_json = join(dataset_dir, 'dataset.json')
 json_poses_prefix = 'pizza_00_'
