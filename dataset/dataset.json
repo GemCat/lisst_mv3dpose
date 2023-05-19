@@ -1,4 +1,25 @@
 {
-    "n_cameras": 5,
-    "scale_to_mm": 1
-  }
+  "n_cameras": 5,
+  "scale_to_mm": 1,
+  
+  "output_dir": "output",
+  "keypoints_dir": "openpose_keypoints",
+  "camera_calib_dir": "cameras",
+  "vis_dir": "visualization",
+  "img_dir": "img_dir",
+  "img_file_type": "jpg",
+  "json_poses_prefix": "pizza_00_",
+
+  "valid_frames": 795,
+  "vis_frames": [0, 100, 200, 300, 400, 500, 600],
+  "plot3d": true,
+
+  "epi_threshold": 80,
+  "max_distance_between_tracks": 80,
+  "min_track_length": 20,
+  "merge_distance": 80,
+  "last_seen_delay": 15,
+  "smoothing_sigma": 2,
+  "smoothing_interpolation_range": 50,
+  "do_smoothing": true
+}

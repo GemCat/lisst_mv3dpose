@@ -1,38 +1,23 @@
 import numpy as np
 from mv3dpose.baseline import estimate, distance_between_poses
+from mv3dpose.config import Config
 from scipy.optimize import linear_sum_assignment
 from scipy.ndimage.filters import gaussian_filter1d
 import json
 
 
-def tracking(calib_per_frame, poses_per_frame,
-             actual_frames=None,
-             epi_threshold=40,
-             merge_distance=-1,
-             last_seen_delay=2,
-             distance_threshold=-1,
-             correct_limb_size=True,
-             scale_to_mm=1,
-             min_track_length=4,
-             max_distance_between_tracks=100,
-             z_axis=2):
+def tracking(calib_per_frame, poses_per_frame, config, 
+             z_axis=2, distance_threshold=-1, correct_limb_size=True):
     """
     :param calib_per_frame: [ [cam1, ... ], ... ] * frames
     :param poses_per_frame: [ [pose1, ...], ... ] * frames
     :param actual_frames: [ frame1, ... ] nd.array {int}
-    :param epi_threshold:
-    :param scale_to_mm: d * scale_to_mm = d_in_mm
-        that means: if our scale is in [m] we need to set
-        scale_to_mm = 1000
-    :param min_track_length:
-    :param correct_limb_size: if True remove limbs that are too long or short
-    :param last_seen_delay: how long can a track be "forgotten" to
-        be recovered
-    :param max_distance_between_tracks: maximal distance between
-        two tracks in [mm]
     :param z_axis: some datasets are rotated around one axis
     :return:
     """
+    
+    print('\n[tracking]')
+
     # check if we only have one set of cameras
     # (cameras do not change over time)
     fixed_cameras = True
@@ -41,14 +26,14 @@ def tracking(calib_per_frame, poses_per_frame,
     n_frames = len(poses_per_frame)
     if not fixed_cameras:
         assert n_frames == len(calib_per_frame)
-    if actual_frames is not None:
-        assert len(actual_frames) == n_frames
+    if config.valid_frames is not None:
+        assert len(config.valid_frames) == n_frames
 
     all_tracks = []
 
     for t in range(n_frames):
-        if actual_frames is not None:
-            real_t = actual_frames[t]
+        if config.valid_frames is not None:
+            real_t = config.valid_frames[t]
         else:
             real_t = t
 
@@ -61,15 +46,15 @@ def tracking(calib_per_frame, poses_per_frame,
         assert len(poses) == len(calib)
 
         predictions = estimate(calib, poses,
-                               scale_to_mm=scale_to_mm,
-                               epi_threshold=epi_threshold,
-                               merge_distance=merge_distance,
+                               scale_to_mm=config.scale_to_mm,
+                               epi_threshold=config.epi_threshold,
+                               merge_distance=config.merge_distance,
                                distance_threshold=distance_threshold,
                                correct_limb_size=correct_limb_size,
                                get_hypothesis=False)
         possible_tracks = []
         for track in all_tracks:
-            if track.last_seen() + last_seen_delay < real_t:
+            if track.last_seen() + config.last_seen_delay < real_t:
                 continue  # track is too old..
             possible_tracks.append(track)
     
@@ -82,12 +67,12 @@ def tracking(calib_per_frame, poses_per_frame,
                     D[tid, pid] = track.distance_to_last(pose)
 
             rows, cols = linear_sum_assignment(D)
-            D = D * scale_to_mm  # ensure that distances in D are in [mm]
+            D = D * config.scale_to_mm  # ensure that distances in D are in [mm]
 
             handled_pids = set()
             for tid, pid in zip(rows, cols):
                 d = D[tid, pid]
-                if d > max_distance_between_tracks:
+                if d > config.max_distance_between_tracks:
                     continue
 
                 # merge pose into track
@@ -101,21 +86,22 @@ def tracking(calib_per_frame, poses_per_frame,
                 if pid in handled_pids:
                     continue
                 track = Track(real_t, pose,
-                              last_seen_delay=last_seen_delay, z_axis=z_axis)
+                              last_seen_delay=config.last_seen_delay, z_axis=z_axis)
                 all_tracks.append(track)
 
         else:  # no tracks yet... add them
             for pose in predictions:
                 track = Track(real_t, pose,
-                              last_seen_delay=last_seen_delay, z_axis=z_axis)
+                              last_seen_delay=config.last_seen_delay, z_axis=z_axis)
                 all_tracks.append(track)
 
     surviving_tracks = []
 
     for track in all_tracks:
-        if len(track) >= min_track_length:
+        if len(track) >= config.min_track_length:
             surviving_tracks.append(track)
 
+    print("\n\t# detected tracks:", len(surviving_tracks))
     return surviving_tracks
 
 

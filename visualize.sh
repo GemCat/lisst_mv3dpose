@@ -1,25 +1,11 @@
 #!/usr/bin/env bash
 
+# execute this script when you are in the main 
+DATASET_DIR="$PWD/dataset/"
+
 echo ""
-echo ""
-echo "visualize mvpose on $1"
-echo ""
+echo "execute visualization on dataset in $DATASET_DIR"
 echo ""
 
-TRK_DIR="$1/tracks3d"
-
-if [ ! -d "$TRK_DIR" ]; then
-  echo "tracks directory $TRK_DIR does not exist!"
-  exit 1
-fi
-
-docker run\
-    --gpus all\
-    --privileged\
-    --name='mv3dpose_vis'\
-    --rm\
-    -it\
-    -v "$PWD":/home/user/mv3dpose:ro\
-    -v "$1":/home/user/dataset\
-    jutanke/mv3dpose\
-    /bin/bash exec_vis.sh
+cd mv3dpose/
+python3 visualize.py $DATASET_DIR
