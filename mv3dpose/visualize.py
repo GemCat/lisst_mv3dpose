@@ -24,7 +24,12 @@ if __name__ == '__main__':
     calib = load_cameras(conf)
     tracks = [json.load(open(join(conf.trk_dir, f))) for f in sorted(listdir(conf.trk_dir))]
     n_tracks = len(tracks)
-    valid_frames = list(range(conf.vis_frames))
+
+    if isinstance(conf.vis_frames, list):
+        valid_frames = conf.vis_frames
+    else:
+        valid_frames = list(range(conf.vis_frames))
+
     cameras = range(conf.n_cameras)
     print("#tracks", n_tracks)
 
@@ -60,8 +65,10 @@ if __name__ == '__main__':
         for camnbr, cid in enumerate(cameras):
 
             camera_img_dir = join(conf.img_dir, 'camera%02d' % cid)
-            fr = "frame%02d_" % cid
-            img_file = join(camera_img_dir, (f'{fr}%09d.' % frame) + conf.img_file_type)
+            # fr = "frame%02d_" % cid
+            # img_file = join(camera_img_dir, (f'{fr}%09d.' % frame) + conf.img_file_type)
+            fr = f"frame{frame}_0{cid}."
+            img_file = join(camera_img_dir, fr + conf.img_file_type)
             assert isfile(img_file), img_file
             im = cv2.cvtColor(cv2.imread(img_file), cv2.COLOR_BGR2RGB)
             h, w, _ = im.shape
