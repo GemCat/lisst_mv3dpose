@@ -47,30 +47,60 @@ if __name__ == '__main__':
                     if (pose_dist < dist_threshold):
                         if i1 in stitch:
                             if stitch[i1]['frame_dist'] < frame_dist:
+                                create = True
+                                # check if the id2 is not paired already
+                                for id in stitch:
+                                    if stitch[id]['track2'] == i2:
+                                        # there is a match, but the current is better
+                                        if (stitch[id]['frame_dist'] > frame_dist) or (stitch[id]['frame_dist'] == frame_dist and stitch[id]['pose_dist'] > pose_dist):
+                                            del stitch[id]
+                                        else:
+                                            create = False
+                                        break
+                                            
+                                if create:
+                                    inner_dict = {}
+                                    inner_dict['track2']     = i2 
+                                    inner_dict['pose_dist']  = pose_dist
+                                    inner_dict['frame_dist'] = frame_dist
+                                    stitch[i1] = inner_dict
+
+                        else:
+                            create = True
+                            # check if the id2 is not paired already
+                            for id in stitch:
+                                if stitch[id]['track2'] == i2:
+                                    # there is a match, but the current is better
+                                    if (stitch[id]['frame_dist'] > frame_dist) or (stitch[id]['frame_dist'] == frame_dist and stitch[id]['pose_dist'] > pose_dist):
+                                        del stitch[id]
+                                        break
+                                    else:
+                                        create = False
+                                    break
+                                        
+                            if create:
                                 inner_dict = {}
                                 inner_dict['track2']     = i2 
                                 inner_dict['pose_dist']  = pose_dist
                                 inner_dict['frame_dist'] = frame_dist
                                 stitch[i1] = inner_dict
 
-                        else:
-                            inner_dict = {}
-                            inner_dict['track2']     = i2 
-                            inner_dict['pose_dist']  = pose_dist
-                            inner_dict['frame_dist'] = frame_dist
-                            stitch[i1] = inner_dict
-
     print("++++++++++++++++")
     print(stitch)
     # print(counter)
     print("++++++++++++++++")
 
-    def merge_tracks(trackA, trackB):
-        new_poses = trackA.poses + trackB.poses
-        frames = trackA.frames + trackB.frames
+    def merge_tracks(track_list):
+        new_poses = []
+        frames = []
+        for el in track_list:
+            new_poses += el.poses
+            frames += el.frames
+        # trackA.poses + trackB.poses
+        # frames = trackA.frames + trackB.frames
 
         last_seen_delay = 99 #trackB.last_seen_delay
-        z_axis = trackB.z_axis
+        z_axis = track_list[0].z_axis
         frame0 = frames.pop(0)
         pose0 = new_poses.pop(0)
 
@@ -79,16 +109,42 @@ if __name__ == '__main__':
            new_track.add_pose(t, pose)
         return new_track
 
+    dependencies = {}
+    for i in range(nr_tracks):
+        dependencies[i] = None
+
+    for i in range(nr_tracks):
+        if i in stitch:
+            dependencies.update({i: stitch[i]['track2']})
+
+    print(dependencies)
 
     stitched_tracks = []
-    for i, track in enumerate(tracks):
-        to_stitch = False
-        for id1 in stitch:
-            if stitch[id1]['track2'] == i:
-                stitched_tracks.append(merge_tracks(tracks[id1], tracks[i]))
-                to_stitch = True
-        if not to_stitch:
-            stitched_tracks.append(tracks[i])
+    already_merged = []
+
+    for track_id in dependencies:
+        if track_id not in already_merged:
+            if dependencies[track_id] is None:
+                stitched_tracks.append(tracks[track_id])
+                print(f"Appended track {track_id}")
+            else:
+                next_id = dependencies[track_id]
+                to_merge = []
+                to_merge.append(tracks[track_id])
+                
+                print(f"Merged tracks in dependencies:")
+                print(track_id)
+                already_merged.append(track_id)
+
+                while next_id is not None:
+                    print(next_id)
+                    already_merged.append(next_id)
+                    to_merge.append(tracks[next_id])
+                    next_id = dependencies[next_id]
+                merged = merge_tracks(to_merge)
+                stitched_tracks.append(merged)
+
+
     print(len(stitched_tracks))
     print(len(tracks)) 
     # delete output dir
