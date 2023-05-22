@@ -7,7 +7,7 @@ import shutil
 
 class Config:
     def __init__(self, dataset_dir, vis = False):
-
+        self.dataset_dir = dataset_dir
         dataset_json = join(dataset_dir, 'dataset.json')
         settings = json.load(open(dataset_json))
 

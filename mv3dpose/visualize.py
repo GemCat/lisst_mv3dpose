@@ -22,7 +22,9 @@ if __name__ == '__main__':
     conf = Config(dataset_dir, vis = True)
 
     calib = load_cameras(conf)
-    tracks = [json.load(open(join(conf.trk_dir, f))) for f in sorted(listdir(conf.trk_dir))]
+    # tracks = [json.load(open(join(conf.trk_dir, f))) for f in sorted(listdir(conf.trk_dir))]
+    stitch_dir = join(conf.dataset_dir, "stitched")
+    tracks = [json.load(open(join(stitch_dir, f))) for f in sorted(listdir(stitch_dir))]
     n_tracks = len(tracks)
 
     if isinstance(conf.vis_frames, list):

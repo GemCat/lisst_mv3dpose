@@ -11,7 +11,7 @@
   "json_poses_prefix": "pizza_00_",
 
   "valid_frames": 600,
-  "vis_frames": [0, 100, 200, 300, 400, 500, 600],
+  "vis_frames": [0, 100, 200, 300, 400, 500],
   "plot3d": true,
 
   "epi_threshold": 80,

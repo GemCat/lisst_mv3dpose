@@ -57,27 +57,7 @@ if __name__ == '__main__':
             if (track1 != track2 and frame_dist > 0 and  frame_dist < max_frame_dist):
                 pose_dist = np.mean(get_distance3d(track1.poses[-1], track2.poses[0]))*conf.scale_to_mm
                 if (pose_dist < dist_threshold):
-                    if i1 in stitch:
-                        if stitch[i1]['frame_dist'] < frame_dist:
-                            create = True
-                            # check if the id2 is not paired already
-                            for id in stitch:
-                                if stitch[id]['track2'] == i2:
-                                    # there is a match, but the current is better
-                                    if (stitch[id]['frame_dist'] > frame_dist) or (stitch[id]['frame_dist'] == frame_dist and stitch[id]['pose_dist'] > pose_dist):
-                                        del stitch[id]
-                                    else:
-                                        create = False
-                                    break
-                                        
-                            if create:
-                                inner_dict = {}
-                                inner_dict['track2']     = i2 
-                                inner_dict['pose_dist']  = pose_dist
-                                inner_dict['frame_dist'] = frame_dist
-                                stitch[i1] = inner_dict
-
-                    else:
+                    if (i1 in stitch and stitch[i1]['frame_dist'] < frame_dist) or i1 not in stitch:
                         create = True
                         # check if the id2 is not paired already
                         for id in stitch:
@@ -85,7 +65,6 @@ if __name__ == '__main__':
                                 # there is a match, but the current is better
                                 if (stitch[id]['frame_dist'] > frame_dist) or (stitch[id]['frame_dist'] == frame_dist and stitch[id]['pose_dist'] > pose_dist):
                                     del stitch[id]
-                                    break
                                 else:
                                     create = False
                                 break
@@ -126,10 +105,14 @@ if __name__ == '__main__':
                 merged = merge_tracks(to_merge)
                 stitched_tracks.append(merged)
 
-    print("++++++++++++++++")
-    print(stitch)
-    print("++++++++++++++++")
-
-    print(dependencies)
+    # print("++++++++++++++++")
+    # print(stitch)
+    # print("++++++++++++++++")
+    # print(dependencies)
 
     print(f"Tracks after stitching: {len(stitched_tracks)}")
+    stitch_dir = join(conf.dataset_dir, "stitched")
+    print('\n[serialize 3d tracks]')
+    for tid, track in enumerate(stitched_tracks):
+        fname = join(stitch_dir, 'track' + str(tid) + '.json')
+        track.to_file(fname)
