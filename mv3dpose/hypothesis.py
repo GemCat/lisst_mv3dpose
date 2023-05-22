@@ -27,7 +27,13 @@ def get_distance3d(person1, person2):
     for jid in range(J):
         if person1[jid] is None or person2[jid] is None:
             continue
-        d = la.norm(person1[jid] - person2[jid])
+        if (isinstance(person1[jid], list)):
+            person1_pose = np.asarray(person1[jid])
+            person2_pose = np.asarray(person2[jid])
+        else:
+            person1_pose = person1[jid]
+            person2_pose = person2[jid]
+        d = la.norm(person1_pose - person2_pose)
         result.append(d)
     return np.array(result)
 

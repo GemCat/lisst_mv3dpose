@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.insert(0, '../')
 from mv3dpose.tracking import tracking, Track
 from mv3dpose.config import Config
@@ -9,30 +10,30 @@ from tqdm import tqdm
 from mv3dpose.hypothesis import get_distance3d
 import numpy as np
 
-
 if __name__ == '__main__':
     
     # the first argument is the path to dataset dir  
     dataset_dir = sys.argv[1]
-    conf = Config(dataset_dir)
+    conf = Config(dataset_dir, vis=True)
 
-    poses_per_frame = load_keypoints(conf)
-    calib = load_cameras(conf)
+    tracks = []
+    print()
+    nr_tracks = 0
+    for path in os.scandir(conf.output_dir):
+        if path.is_file():
+            nr_tracks += 1
+            
+    for i in range(nr_tracks):
+        filename = join(conf.output_dir, f'track{i}.json')
+        track = Track.from_file(filename)
+        tracks.append(track)
 
-    # T R A C K I N G
-    tracks = tracking(calib, poses_per_frame, conf, distance_threshold=200)
-    
-    # S M O O T H I N G
-    if conf.do_smoothing:
-        print('\n[smoothing]')
-        tracks_ = []
-        for track in tqdm(tracks):
-            track = Track.smoothing(track,
-                                    sigma=conf.smoothing_sigma,
-                                    interpolation_range=conf.smoothing_interpolation_range)
-            tracks_.append(track)
-        tracks = tracks_   
 
+    print(f"Tracks read: {len(tracks)}")
+
+    # print(tracks[0].poses[0])
+    # print(np.asarray(tracks[0].poses[0]))
+    # T R A C K S   S T I T C H I N G 
     dist_threshold = 250
     counter = 0
     stitch = {}
@@ -63,35 +64,34 @@ if __name__ == '__main__':
     print(stitch)
     # print(counter)
     print("++++++++++++++++")
-    # def merge_tracks(trackA, trackB):
-    #     new_poses = trackA.poses + trackB.poses
-    #     frames = trackA.frames + trackB.frames
 
-    #     last_seen_delay = 99 #trackB.last_seen_delay
-    #     z_axis = trackB.z_axis
-    #     frame0 = frames.pop(0)
-    #     pose0 = new_poses.pop(0)
+    def merge_tracks(trackA, trackB):
+        new_poses = trackA.poses + trackB.poses
+        frames = trackA.frames + trackB.frames
 
-    #     new_track = Track(frame0, pose0, last_seen_delay, z_axis)
-    #     for t, pose in zip(frames, new_poses):
-    #        new_track.add_pose(t, pose)
-    #     return new_track
+        last_seen_delay = 99 #trackB.last_seen_delay
+        z_axis = trackB.z_axis
+        frame0 = frames.pop(0)
+        pose0 = new_poses.pop(0)
+
+        new_track = Track(frame0, pose0, last_seen_delay, z_axis)
+        for t, pose in zip(frames, new_poses):
+           new_track.add_pose(t, pose)
+        return new_track
 
 
-    # stitched_tracks = []
-    # for i, track in enumerate(tracks):
-    #     to_stitch = False
-    #     for id1 in stitch:
-    #         if stitch[id1]['track2'] == i:
-    #             stitched_tracks.append(merge_tracks(tracks[id1], tracks[i]))
-    #             to_stitch = True
-    #     if not to_stitch:
-    #         stitched_tracks.append(tracks[i])
-    # print(len(stitched_tracks))
-    # print(len(tracks))      
-
-    # S E R I A L I Z E
-    print('\n[serialize 3d tracks]')
-    for tid, track in tqdm(enumerate(tracks)):
-        fname = join(conf.output_dir, 'track' + str(tid) + '.json')
-        track.to_file(fname)
+    stitched_tracks = []
+    for i, track in enumerate(tracks):
+        to_stitch = False
+        for id1 in stitch:
+            if stitch[id1]['track2'] == i:
+                stitched_tracks.append(merge_tracks(tracks[id1], tracks[i]))
+                to_stitch = True
+        if not to_stitch:
+            stitched_tracks.append(tracks[i])
+    print(len(stitched_tracks))
+    print(len(tracks)) 
+    # delete output dir
+    # if isdir(self.output_dir) and not vis:
+    #         print('\n[deleting existing output directory...]')
+    #         shutil.rmtree(self.output_dir)
