@@ -17,7 +17,20 @@ def load_keypoints(config: Config):
         # directories with json files wrt each camera  
         loc = join(config.kyp_dir, f'{config.json_poses_prefix}%02d_json' % cid)
         assert isdir(loc), loc
-        file_prefix = f'{config.json_poses_prefix}%02d' % cid
+        if config.json_poses_prefix == "dance_00_":
+            if cid == 0:
+                fid = 0
+            elif cid == 1:
+                fid = 3
+            elif cid == 2:
+                fid = 5
+            elif cid == 3:
+                fid = 6
+            elif cid == 4:
+                fid = 8
+            file_prefix = f'{config.json_poses_prefix}%02d' % fid
+        else:
+            file_prefix = f'{config.json_poses_prefix}%02d' % cid
         pe = OpenPoseKeypoints(f'{file_prefix}_%012d', loc)
         keypoints.append(pe)
 

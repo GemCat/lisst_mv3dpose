@@ -32,6 +32,9 @@ def tracking(calib_per_frame, poses_per_frame, config,
     all_tracks = []
 
     for t in range(n_frames):
+        if config.json_poses_prefix == "dance_00_":
+            if t == 1235:
+                continue
         if config.valid_frames is not None:
             real_t = config.valid_frames[t]
         else:
