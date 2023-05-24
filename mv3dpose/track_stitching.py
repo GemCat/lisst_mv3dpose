@@ -9,15 +9,30 @@ from mv3dpose.hypothesis import get_distance3d
 import numpy as np
 
 
-def merge_tracks(track_list):
+def merge_tracks(curr_track, next_track, frame):
     new_poses = []
     frames = []
-    for el in track_list:
-        new_poses += el.poses
-        frames += el.frames
+
+    # if tracks don't overlap, combine everything
+    if curr_track.frames[-1] < frame:
+            new_poses = curr_track.poses + next_track.poses
+            frames = curr_track.frames + next_track.frames
+    
+    # if tracks do overlap, add only the frames and poses from the current track
+    # up to the first frame and pose of the next track. Add everything from 
+    # the next track
+    else:
+        idx = 0
+        while (curr_track.frames[idx] < frame):
+            new_poses.append(curr_track.poses[idx])
+            frames.append(curr_track.frames[idx])
+            idx += 1
+
+        new_poses += next_track.poses
+        frames += next_track.frames
 
     last_seen_delay = 99 
-    z_axis = track_list[0].z_axis
+    z_axis = curr_track.z_axis
     frame0 = frames.pop(0)
     pose0 = new_poses.pop(0)
 
@@ -30,7 +45,8 @@ def merge_tracks(track_list):
 if __name__ == '__main__':
     
     # the first argument is the path to dataset dir  
-    dataset_dir = sys.argv[1]
+    # dataset_dir = sys.argv[1]
+    dataset_dir = '/content/drive/MyDrive/lisst_mv3dpose/dataset'
     conf = Config(dataset_dir, vis=True)
 
     tracks = []
@@ -47,72 +63,65 @@ if __name__ == '__main__':
     print(f"Tracks read: {len(tracks)}")
 
     # T R A C K S   S T I T C H I N G 
-    dist_threshold = 250
+    dist_threshold = 100
     max_frame_dist = 2*conf.min_track_length
 
-    stitch = {}
-    for i1, track1 in enumerate(tracks):
-        for i2, track2 in enumerate(tracks):
-            frame_dist = track2.frames[0] - track1.frames[-1]
-            if (track1 != track2 and frame_dist > 0 and  frame_dist < max_frame_dist):
-                pose_dist = np.mean(get_distance3d(track1.poses[-1], track2.poses[0]))*conf.scale_to_mm
-                if (pose_dist < dist_threshold):
-                    if (i1 in stitch and stitch[i1]['frame_dist'] < frame_dist) or i1 not in stitch:
-                        create = True
-                        # check if the id2 is not paired already
-                        for id in stitch:
-                            if stitch[id]['track2'] == i2:
-                                # there is a match, but the current is better
-                                if (stitch[id]['frame_dist'] > frame_dist) or (stitch[id]['frame_dist'] == frame_dist and stitch[id]['pose_dist'] > pose_dist):
-                                    del stitch[id]
-                                else:
-                                    create = False
-                                break
-                                    
-                        if create:
-                            inner_dict = {}
-                            inner_dict['track2']     = i2 
-                            inner_dict['pose_dist']  = pose_dist
-                            inner_dict['frame_dist'] = frame_dist
-                            stitch[i1] = inner_dict
+    new_tracks = {}
+    nid = 0
+    discard = False
+    merged = False
 
-    
-    # create a dict with correspondences between track ids
-    dependencies = {}
-    for i in range(nr_tracks):
-        if i in stitch:
-            dependencies[i] = stitch[i]['track2']
-        else:
-            dependencies[i] = None       
+    for tid, track in enumerate(tracks):
 
-    # create a list with stitched tracks
-    stitched_tracks = []
-    already_merged = []
-    for track_id in dependencies:
-        if track_id not in already_merged:
-            if dependencies[track_id] is None:
-                stitched_tracks.append(tracks[track_id])
+        # Establish each track that has frame 0 as a new track
+        if track.frames[0] == 0:
+            new_tracks[nid] = track
+            nid += 1
+            continue
+        
+        next_frame = track.frames[0]
+        next_pose = track.poses[0]
+
+        # Try to match the next track to an already existing new track
+        for id in range(nid):
+            new_track = new_tracks[id]
+            if next_frame < new_track.frames[-1]:
+                pose_idx = new_track.frames.index(next_frame)
+                new_pose = new_track.poses[pose_idx]
             else:
-                next_id = dependencies[track_id]
-                to_merge = []
-                to_merge.append(tracks[track_id])
-                already_merged.append(track_id)
+                frame_dist = next_frame - new_track.frames[-1]
+                if frame_dist > max_frame_dist:
+                    continue
+                new_pose = new_track.poses[-1]
 
-                while next_id is not None:
-                    already_merged.append(next_id)
-                    to_merge.append(tracks[next_id])
-                    next_id = dependencies[next_id]
-                merged = merge_tracks(to_merge)
-                stitched_tracks.append(merged)
+            pose_dist = np.mean(get_distance3d(new_pose, next_pose))
 
-    # print("++++++++++++++++")
-    # print(stitch)
-    # print("++++++++++++++++")
-    # print(dependencies)
+            if pose_dist < dist_threshold:
+                # discard track if its pose matches but its frames are already 
+                # encompassed by the current new track
+                if track.frames[-1] < new_track.frames[-1]:  
+                    discard = True
+                    break
 
-    print(f"Tracks after stitching: {len(stitched_tracks)}")
+                merged_track = merge_tracks(new_track, track, next_frame)
+                new_tracks[id] = merged_track
+                merged = True
+                break
+
+
+        if discard or merged:
+                merged = False
+                discard = False
+                continue
+        
+        # Add track as a new track if it isn't merged or discarded 
+        new_tracks[nid] = track
+        nid += 1
+            
+    print(f"Tracks after stitching: {len(new_tracks.keys())}")
     stitch_dir = join(conf.dataset_dir, "stitched")
     print('\n[serialize 3d tracks]')
-    for tid, track in enumerate(stitched_tracks):
+
+    for tid, track in new_tracks.items():
         fname = join(stitch_dir, 'track' + str(tid) + '.json')
         track.to_file(fname)

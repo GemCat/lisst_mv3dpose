@@ -27,7 +27,7 @@ def load_keypoints(config: Config):
             elif cid == 3:
                 fid = 6
             elif cid == 4:
-                fid = 8
+                fid = 7
             file_prefix = f'{config.json_poses_prefix}%02d' % fid
         else:
             file_prefix = f'{config.json_poses_prefix}%02d' % cid

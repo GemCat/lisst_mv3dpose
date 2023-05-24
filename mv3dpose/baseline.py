@@ -14,6 +14,9 @@ def distance_between_poses(pose1, pose2, z_axis):
     """
     J = len(pose1)
     assert len(pose2) == J
+    print("pose 1 and pose 2")
+    print(pose1)
+    print(pose2)
     distances = []
     for jid in range(J):
         if pose2[jid] is None or pose1[jid] is None:
@@ -160,7 +163,10 @@ def estimate(calib, poses,
             for j in range(i+1, n):
                 pose1 = humans[i]
                 pose2 = humans[j]
-                distance = distance_between_poses(pose1, pose2, z_axis)
+                numNones = sum((x is None for x in pose2[0:24]))
+                if numNones == 24:
+                    pose2 = pose1
+                distance = distance_between_poses(pose1[0:24], pose2[0:24], z_axis)
                 distances.append((i, j, distance * scale_to_mm))
 
         # the root merge is always the smallest hid
