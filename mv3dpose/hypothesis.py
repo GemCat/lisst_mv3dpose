@@ -34,6 +34,7 @@ def get_distance3d(person1, person2):
             person1_pose = person1[jid]
             person2_pose = person2[jid]
         d = la.norm(person1_pose - person2_pose)
+
         result.append(d)
     return np.array(result)
 

@@ -14,9 +14,6 @@ def distance_between_poses(pose1, pose2, z_axis):
     """
     J = len(pose1)
     assert len(pose2) == J
-    print("pose 1 and pose 2")
-    print(pose1)
-    print(pose2)
     distances = []
     for jid in range(J):
         if pose2[jid] is None or pose1[jid] is None:

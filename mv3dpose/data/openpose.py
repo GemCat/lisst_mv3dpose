@@ -39,11 +39,18 @@ class OpenPoseKeypoints:
         :param frame:
         :return:
         """
-        if "dance" in self.loc:
-            fr = frame + 100
+        if "eggobody" in self.loc:
+            fid = 1551 + frame
+            fname = self.loc + "/frame_0" + str(fid) + "_keypoints.json"
+        elif "egobody" in self.loc:
+            fid = 1101 + frame
+            fname = self.loc + "/frame_0" + str(fid) + "_keypoints.json"
         else:
-            fr = frame
-        fname = join(self.loc, self.naming + '_keypoints.json') % (fr, )
+            if "dance" in self.loc:
+                fr = frame + 100
+            else:
+                fr = frame
+            fname = join(self.loc, self.naming + '_keypoints.json') % (fr, )
         assert isfile(fname), fname
         with open(fname, 'r') as f:
             kp = json.load(f)
@@ -56,7 +63,7 @@ class OpenPoseKeypoints:
             (14, 15), (15, 16), (16, 17), (17, 18),
             (18, 19), (19, 20), (20, 21),
             (21, 22), (22, 23), (23, 24),
-            (24, 34), (25, 29), (26, 37),  # left hand, thumb, middle
+            (24, 34), (25, 29), (26, 37),  # left hand, thumb, middle(9,4,12)
             (27, 55), (28, 50), (29, 58)  # right hand, thumb, middle
         ])
 

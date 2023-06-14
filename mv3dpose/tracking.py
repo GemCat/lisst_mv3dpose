@@ -32,10 +32,6 @@ def tracking(calib_per_frame, poses_per_frame, config,
     all_tracks = []
 
     for t in range(n_frames):
-        # if config.json_poses_prefix == "dance_00_":
-        #     if t == 1235:
-        #         continue
-        print("Frame: " + str(t))
         if config.valid_frames is not None:
             real_t = config.valid_frames[t]
         else:
@@ -67,8 +63,6 @@ def tracking(calib_per_frame, poses_per_frame, config,
             m = len(predictions)
             D = np.empty((n, m))
             for tid, track in enumerate(possible_tracks):
-                print("current track to compare: ")
-                print(track.poses[-1])
                 for pid, pose in enumerate(predictions):
                     D[tid, pid] = track.distance_to_last(pose)
 
