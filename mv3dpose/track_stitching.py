@@ -71,8 +71,7 @@ def merge_tracks(curr_track, next_track, frame):
 if __name__ == '__main__':
     
     # the first argument is the path to dataset dir  
-    # dataset_dir = sys.argv[1]
-    dataset_dir = '/content/drive/MyDrive/lisst_mv3dpose/dataset'
+    dataset_dir = sys.argv[1]
     conf = Config(dataset_dir, vis=True)
 
     tracks = []
